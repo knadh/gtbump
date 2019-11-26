@@ -6,7 +6,7 @@ README = open("README.md").read()
 
 setup(
 	name="gtbump",
-	version="0.1.0",
+	version="0.1.1",
 	description="git-tag-bump: a simple utility for quickly bumping Git semver tags",
 	long_description=README,
 	author="Kailash Nadh",
