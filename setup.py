@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+from codecs import open
+from setuptools import setup
+
+README = open("README.md").read()
+
+setup(
+	name="gtbump",
+	version="0.1.0",
+	description="git-tag-bump: a simple utility for quickly bumping Git semver tags",
+	long_description=README,
+	author="Kailash Nadh",
+	author_email="kailash@nadh.in",
+	url="https://github.com/knadh/gtbump",
+	packages=['gtbump'],
+	include_package_data=True,
+	download_url="https://github.com/knadh/gtbump",
+	license="MIT License",
+	entry_points={
+		'console_scripts': [
+			'gtbump = gtbump:main'
+		],
+	},
+	classifiers=[
+        "Topic :: Software Development :: Version Control",
+        "Topic :: Software Development :: Version Control :: Git",
+        "Topic :: Software Development :: Build Tools"
+	]
+)

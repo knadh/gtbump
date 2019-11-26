@@ -1,0 +1,121 @@
+#!/bin/python
+import argparse
+import re
+import subprocess
+import sys
+
+
+def exec(cmd):
+    """Executes a git shell command."""
+    out = subprocess.Popen(cmd.split(" "),
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT)
+    stdout, stderr = out.communicate()
+
+    # Error on stderr?
+    if stderr:
+        raise Exception(stderr.strip().decode("utf-8"))
+
+    if stdout:
+        o = stdout.strip().decode("utf-8")
+        if "No names found" in o:
+            raise Exception("no tags found. Run --init to add v0.1.0")
+        if "fatal" in o:
+            raise Exception(o)
+        return o
+
+
+def get_last_tag():
+    """Get the latest (closest) annotated git tag."""
+    tag = exec("git describe --abbrev=0")
+
+    # Parse semver tag: v0.0.0-xxxx (optional suffix).
+    match = re.search(r"^v(\d)\.(\d)\.(\d)((\-|\+).+?)?$", tag)
+    if not match or len(match.groups()) != 5:
+        raise Exception("invalid tag in non-semver format: {}".format(tag))
+
+    g = match.groups()
+    return {"tag": tag,
+            "major": int(g[0]),
+            "minor": int(g[1]),
+            "patch": int(g[2]),
+            "suffix": g[3] if g[3] else ""}
+
+
+def bump(current, part, suffix="", strip_suffix=False):
+    """
+    Given the current tag, part (major, minor ...) to bump and optional
+    semver suffixes, bump the value and adds an annotated tag to the repo. 
+    """
+    fmt = "v{}.{}.{}{}"
+    old_tag = fmt.format(
+        current["major"], current["minor"], current["patch"], current["suffix"])
+
+    # Bump the numeric part.
+    current[part] += 1
+
+    if strip_suffix:
+        current["suffix"] = ""
+
+    if suffix:
+        current["suffix"] = suffix
+
+    new_tag = fmt.format(
+        current["major"], current["minor"], current["patch"], current["suffix"])
+    exec("git tag -a {} -m {}".format(new_tag, new_tag))
+    print("bumped {} -> {}".format(old_tag, new_tag))
+
+
+def main():
+    """Run the CLI."""
+    p = argparse.ArgumentParser(
+        description="simple semver tag bump helper for git")
+    p.add_argument("-ss", "--strip-suffix", action="store_true",
+                   dest="strip_suffix", help="strip existing suffx from tag (eg: -beta.0)")
+    p.add_argument("-s", "--suffix", action="store", type=str,
+                   dest="suffix", help="optional suffix to add to the tag (eg: -beta.0)")
+
+    g = p.add_argument_group("bump").add_mutually_exclusive_group()
+    g.add_argument("-show", "--show", action="store_true",
+                   dest="show", help="show the closest (last) tag")
+    g.add_argument("-init", "--init", action="store_true",
+                   dest="init", help="add tag v0.1.0 (when there are no tags)")
+    g.add_argument("-delete-last", "--delete-last", action="store_true",
+                   dest="delete_last", help="deletes the closest (last) tag")
+    g.add_argument("-major", "--major", action="store_true",
+                   dest="major", help="bump the major version")
+    g.add_argument("-minor", "--minor", action="store_true",
+                   dest="minor", help="bump the minor version")
+    g.add_argument("-patch", "--patch", action="store_true",
+                   dest="patch", help="bump the patch version")
+    args = p.parse_args()
+
+    # Show the last tag.
+    try:
+        if args.show:
+            print(get_last_tag()["tag"])
+            sys.exit(0)
+        elif args.init:
+            bump({"major": 0, "minor": 0, "patch": 0,
+                  "suffix": ""}, "minor", "", False)
+            sys.exit(0)
+        elif args.delete_last:
+            tag = get_last_tag()["tag"]
+            exec("git tag -d {}".format(tag))
+            print("deleted {}".format(tag))
+            sys.exit(0)
+        else:
+            # Get the type of bump from the args.
+            parts = {"major": args.major,
+                     "minor": args.minor, "patch": args.patch}
+            part = list(filter(parts.get, parts))
+            if len(part) > 0:
+                # Get the last tag and increment the requested part.
+                current = get_last_tag()
+                bump(current, part[0], args.suffix, args.strip_suffix)
+                sys.exit(0)
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)
+
+    p.print_help()
