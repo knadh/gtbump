@@ -4,6 +4,10 @@ import re
 import subprocess
 import sys
 
+MAJOR = "major"
+MINOR = "minor"
+PATCH = "patch"
+SUFFIX = "suffix"
 
 def exec(cmd):
     """Executes a git shell command."""
@@ -36,10 +40,10 @@ def get_last_tag():
 
     g = match.groups()
     return {"tag": tag,
-            "major": int(g[0]),
-            "minor": int(g[1]),
-            "patch": int(g[2]),
-            "suffix": g[3] if g[3] else ""}
+            MAJOR: int(g[0]),
+            MINOR: int(g[1]),
+            PATCH: int(g[2]),
+            SUFFIX: g[3] if g[3] else ""}
 
 
 def bump(current, part, suffix="", strip_suffix=False):
@@ -49,19 +53,24 @@ def bump(current, part, suffix="", strip_suffix=False):
     """
     fmt = "v{}.{}.{}{}"
     old_tag = fmt.format(
-        current["major"], current["minor"], current["patch"], current["suffix"])
+        current[MAJOR], current[MINOR], current[PATCH], current[SUFFIX])
 
-    # Bump the numeric part.
+    # Bump the numeric part and set the lower parts to 0.
     current[part] += 1
+    if part == MAJOR:
+        current[MINOR] = 0
+        current[PATCH] = 0
+    elif part == MINOR:
+        current[PATCH] = 0
 
     if strip_suffix:
-        current["suffix"] = ""
+        current[SUFFIX] = ""
 
     if suffix:
-        current["suffix"] = suffix
+        current[SUFFIX] = suffix
 
     new_tag = fmt.format(
-        current["major"], current["minor"], current["patch"], current["suffix"])
+        current[MAJOR], current[MINOR], current[PATCH], current[SUFFIX])
     exec("git tag -a {} -m {}".format(new_tag, new_tag))
     print("bumped {} -> {}".format(old_tag, new_tag))
 
@@ -96,8 +105,8 @@ def main():
             print(get_last_tag()["tag"])
             sys.exit(0)
         elif args.init:
-            bump({"major": 0, "minor": 0, "patch": 0,
-                  "suffix": ""}, "minor", "", False)
+            bump({MAJOR: 0, MINOR: 0, PATCH: 0,
+                  SUFFIX: ""}, MINOR, "", False)
             sys.exit(0)
         elif args.delete_last:
             tag = get_last_tag()["tag"]
@@ -106,8 +115,8 @@ def main():
             sys.exit(0)
         else:
             # Get the type of bump from the args.
-            parts = {"major": args.major,
-                     "minor": args.minor, "patch": args.patch}
+            parts = {MAJOR: args.major,
+                     MINOR: args.minor, PATCH: args.patch}
             part = list(filter(parts.get, parts))
             if len(part) > 0:
                 # Get the last tag and increment the requested part.
