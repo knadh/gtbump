@@ -82,7 +82,7 @@ def main():
     p.add_argument("-ss", "--strip-suffix", action="store_true",
                    dest="strip_suffix", help="strip existing suffx from tag (eg: -beta.0)")
     p.add_argument("-s", "--suffix", action="store", type=str,
-                   dest="suffix", help="optional suffix to add to the tag (eg: -beta.0)")
+                   dest="suffix", help="optional suffix to add to the tag (eg: -beta.0). Pass as =\"-beta\" if the first character is a dash")
 
     g = p.add_argument_group("bump").add_mutually_exclusive_group()
     g.add_argument("-show", "--show", action="store_true",
