@@ -114,6 +114,12 @@ def main():
             print("deleted {}".format(tag))
             sys.exit(0)
         else:
+            # If there's a suffix, it should start with - or +.
+            if args.suffix and args.suffix != "":
+                if args.suffix[0] not in ["-", "+"]:
+                    print("suffix should start with a - or +")
+                    sys.exit(0)
+
             # Get the type of bump from the args.
             parts = {MAJOR: args.major,
                      MINOR: args.minor, PATCH: args.patch}
@@ -128,3 +134,5 @@ def main():
         sys.exit(1)
 
     p.print_help()
+
+main()
