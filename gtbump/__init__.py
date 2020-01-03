@@ -34,7 +34,7 @@ def get_last_tag():
     tag = exec("git describe --abbrev=0")
 
     # Parse semver tag: v0.0.0-xxxx (optional suffix).
-    match = re.search(r"^v(\d)\.(\d)\.(\d)((\-|\+).+?)?$", tag)
+    match = re.search(r"^v(\d+)\.(\d+)\.(\d+)((\-|\+).+?)?$", tag)
     if not match or len(match.groups()) != 5:
         raise Exception("invalid tag in non-semver format: {}".format(tag))
 
@@ -134,5 +134,3 @@ def main():
         sys.exit(1)
 
     p.print_help()
-
-main()
