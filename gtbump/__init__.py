@@ -9,7 +9,7 @@ MINOR = "minor"
 PATCH = "patch"
 SUFFIX = "suffix"
 
-def exec(cmd):
+def run(cmd):
     """Executes a git shell command."""
     out = subprocess.Popen(cmd.split(" "),
                            stdout=subprocess.PIPE,
@@ -31,7 +31,7 @@ def exec(cmd):
 
 def get_last_tag():
     """Get the latest (closest) annotated git tag."""
-    tag = exec("git describe --abbrev=0")
+    tag = run("git describe --abbrev=0")
 
     # Parse semver tag: v0.0.0-xxxx (optional suffix).
     match = re.search(r"^v(\d+)\.(\d+)\.(\d+)((\-|\+).+?)?$", tag)
@@ -71,7 +71,7 @@ def bump(current, part, suffix="", strip_suffix=False):
 
     new_tag = fmt.format(
         current[MAJOR], current[MINOR], current[PATCH], current[SUFFIX])
-    exec("git tag -a {} -m {}".format(new_tag, new_tag))
+    run("git tag -a {} -m {}".format(new_tag, new_tag))
     print("bumped {} -> {}".format(old_tag, new_tag))
 
 
@@ -118,7 +118,7 @@ def main():
             sys.exit(0)
         elif args.delete_last:
             tag = get_last_tag()["tag"]
-            exec("git tag -d {}".format(tag))
+            run("git tag -d {}".format(tag))
             print("deleted {}".format(tag))
             sys.exit(0)
         else:
