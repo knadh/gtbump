@@ -105,6 +105,14 @@ def main():
             print(get_last_tag()["tag"])
             sys.exit(0)
         elif args.init:
+            # Check if a tag already exists.
+            try:
+                t = get_last_tag()["tag"]
+                print("tag already initialized (last = {})".format(t))
+                sys.exit(1)
+            except Exception:
+                pass
+
             bump({MAJOR: 0, MINOR: 0, PATCH: 0,
                   SUFFIX: ""}, MINOR, "", False)
             sys.exit(0)
