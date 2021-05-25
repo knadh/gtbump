@@ -4,6 +4,8 @@ import re
 import subprocess
 import sys
 
+__version__ = "0.3.0"
+
 MAJOR = "major"
 MINOR = "minor"
 PATCH = "patch"
@@ -83,6 +85,8 @@ def main():
                    dest="strip_suffix", help="strip existing suffx from tag (eg: -beta.0)")
     p.add_argument("-s", "--suffix", action="store", type=str,
                    dest="suffix", help="optional suffix to add to the tag (eg: -beta.0). Pass as =\"-beta\" if the first character is a dash")
+    p.add_argument("-v", "--version", action="store_true", dest="version",
+                   help="show version")
 
     g = p.add_argument_group("bump").add_mutually_exclusive_group()
     g.add_argument("-show", "--show", action="store_true",
@@ -98,6 +102,10 @@ def main():
     g.add_argument("-patch", "--patch", action="store_true",
                    dest="patch", help="bump the patch version")
     args = p.parse_args()
+
+    if args.version:
+        print("v{}".format(__version__))
+        quit()
 
     # Show the last tag.
     try:

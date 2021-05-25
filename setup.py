@@ -2,11 +2,13 @@
 from codecs import open
 from setuptools import setup
 
+from gtbump import __version__
+
 README = open("README.md").read()
 
 setup(
 	name="gtbump",
-	version="0.3.0",
+	version=__version__,
 	description="git-tag-bump: a simple utility for quickly bumping Git semver tags",
 	long_description=README,
 	long_description_content_type="text/markdown",
