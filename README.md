@@ -30,6 +30,10 @@ bumped v0.2.0 -> v1.2.0
 # delete the last tag
 $ gtbump --delete-last
 deleted v1.2.0
+
+# push the last tag upstream(or --push-last=your_remote_name)
+$ gtbump --push-last
+pushing v0.3.0 to origin
 ```
 
 Check `gtbump --help` for more options.

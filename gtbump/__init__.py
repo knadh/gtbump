@@ -1,10 +1,11 @@
 #!/bin/python
 import argparse
 import re
+from time import sleep
 import subprocess
 import sys
 
-__version__ = "0.3.0"
+__version__ = "1.0"
 
 MAJOR = "major"
 MINOR = "minor"
@@ -83,24 +84,26 @@ def main():
         description="simple semver tag bump helper for git")
     p.add_argument("-ss", "--strip-suffix", action="store_true",
                    dest="strip_suffix", help="strip existing suffx from tag (eg: -beta.0)")
-    p.add_argument("-s", "--suffix", action="store", type=str,
+    p.add_argument("-s", "--suffix", action="store", type=str, metavar="",
                    dest="suffix", help="optional suffix to add to the tag (eg: -beta.0). Pass as =\"-beta\" if the first character is a dash")
     p.add_argument("-v", "--version", action="store_true", dest="version",
                    help="show version")
 
     g = p.add_argument_group("bump").add_mutually_exclusive_group()
-    g.add_argument("-show", "--show", action="store_true",
-                   dest="show", help="show the closest (last) tag")
     g.add_argument("-init", "--init", action="store_true",
                    dest="init", help="add tag v0.1.0 (when there are no tags)")
+    g.add_argument("-show", "--show", action="store_true",
+                   dest="show", help="show last tag")
+    g.add_argument("-push-last", "--push-last", action="store", type=str, nargs="?", const="origin", metavar="",
+                   dest="push_last", help="push the last tag upstream (default: origin). IMPORTANT: This skips pre-push hooks with --no-verify. eg: --push-last, --push-last=remote_name")
     g.add_argument("-delete-last", "--delete-last", action="store_true",
-                   dest="delete_last", help="deletes the closest (last) tag")
+                   dest="delete_last", help="delete the last tag")
     g.add_argument("-major", "--major", action="store_true",
-                   dest="major", help="bump the major version")
+                   dest="major", help="bump major version (vX.0.0)")
     g.add_argument("-minor", "--minor", action="store_true",
-                   dest="minor", help="bump the minor version")
+                   dest="minor", help="bump minor version (v0.X.0)")
     g.add_argument("-patch", "--patch", action="store_true",
-                   dest="patch", help="bump the patch version")
+                   dest="patch", help="bump patch version (v0.0.X)")
     args = p.parse_args()
 
     if args.version:
@@ -124,11 +127,24 @@ def main():
             bump({MAJOR: 0, MINOR: 0, PATCH: 0,
                   SUFFIX: ""}, MINOR, "", False)
             sys.exit(0)
+
+        elif args.push_last:
+            tag = get_last_tag()["tag"]
+            print("pushing {} to {}".format(tag, args.push_last))
+            sleep(2);
+            try:
+                print(run("git push --no-verify {} {}".format(args.push_last, tag)))
+            except Exception as e:
+                print(e)
+                sys.exit(1)
+            sys.exit(0)
+
         elif args.delete_last:
             tag = get_last_tag()["tag"]
             run("git tag -d {}".format(tag))
             print("deleted {}".format(tag))
             sys.exit(0)
+
         else:
             # If there's a suffix, it should start with - or +.
             if args.suffix and args.suffix != "":
