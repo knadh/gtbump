@@ -5,7 +5,7 @@ from time import sleep
 import subprocess
 import sys
 
-__version__ = "1.0"
+__version__ = "1.1.0"
 
 MAJOR = "major"
 MINOR = "minor"
@@ -14,7 +14,8 @@ SUFFIX = "suffix"
 
 def run(cmd):
     """Executes a git shell command."""
-    out = subprocess.Popen(cmd.split(" "),
+    out = subprocess.Popen(cmd,
+                           shell=True,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT)
     stdout, stderr = out.communicate()
@@ -47,6 +48,27 @@ def get_last_tag():
             MINOR: int(g[1]),
             PATCH: int(g[2]),
             SUFFIX: g[3] if g[3] else ""}
+
+
+def get_all_tags():
+    """Get all annotated (closest) tags by lexicographic order."""
+    tags = run("git tag --sort=-refname").split("\n")
+
+    # Parse semver tag: v0.0.0-xxxx (optional suffix).
+    out = []
+    for t in tags:
+        match = re.search(r"^v(\d+)\.(\d+)\.(\d+)((\-|\+).+?)?$", t)
+        if not match or len(match.groups()) != 5:
+            raise Exception("invalid tag in non-semver format: {}".format(t))
+
+        g = match.groups()
+        out.append({"tag": t,
+            MAJOR: int(g[0]),
+            MINOR: int(g[1]),
+            PATCH: int(g[2]),
+            SUFFIX: g[3] if g[3] else ""})
+
+    return out
 
 
 def bump(current, part, suffix="", strip_suffix=False):
@@ -94,6 +116,8 @@ def main():
                    dest="init", help="add tag v0.1.0 (when there are no tags)")
     g.add_argument("-show", "--show", action="store_true",
                    dest="show", help="show last tag")
+    g.add_argument("-changelog", "--changelog", action="store_true",
+                   dest="changelog", help="generate a Markdown changelog of commits between the last and the current version")
     g.add_argument("-push-last", "--push-last", action="store", type=str, nargs="?", const="origin", metavar="",
                    dest="push_last", help="push the last tag upstream (default: origin). IMPORTANT: This skips pre-push hooks with --no-verify. eg: --push-last, --push-last=remote_name")
     g.add_argument("-delete-last", "--delete-last", action="store_true",
@@ -115,6 +139,7 @@ def main():
         if args.show:
             print(get_last_tag()["tag"])
             sys.exit(0)
+
         elif args.init:
             # Check if a tag already exists.
             try:
@@ -127,6 +152,27 @@ def main():
             bump({MAJOR: 0, MINOR: 0, PATCH: 0,
                   SUFFIX: ""}, MINOR, "", False)
             sys.exit(0)
+
+        elif args.changelog:
+            tags = get_all_tags()
+
+            cmd = "git log --pretty=\"- %h %s\" {}"
+            if len(tags) == 1:
+                print("changelog for {}".format(tags[0]["tag"]))
+                cmd = cmd.format(tags[0]["tag"])
+            else:
+                print("changelog for {} -> {}".format(tags[1]["tag"], tags[0]["tag"]))
+                # git log --pretty="- %h %s" v1.0.0..v1.1.0
+                cmd = cmd.format("{}..{}".format(tags[1]["tag"], tags[0]["tag"]))
+
+            out = run(cmd)
+            if not out:
+                print("no commits")
+            else:
+                print(out)
+
+            sys.exit(0)
+
 
         elif args.push_last:
             tag = get_last_tag()["tag"]
