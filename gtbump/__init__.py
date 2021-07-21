@@ -35,7 +35,7 @@ def run(cmd):
 
 def get_last_tag():
     """Get the latest (closest) annotated git tag."""
-    tag = run("git describe --abbrev=0")
+    tag = run("git describe --abbrev=0 --tags")
 
     # Parse semver tag: v0.0.0-xxxx (optional suffix).
     match = re.search(r"^v(\d+)\.(\d+)\.(\d+)((\-|\+).+?)?$", tag)
