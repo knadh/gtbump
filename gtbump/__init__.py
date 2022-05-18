@@ -52,7 +52,7 @@ def get_last_tag():
 
 def get_all_tags():
     """Get all annotated (closest) tags by lexicographic order."""
-    tags = run("git tag --sort=-refname").split("\n")
+    tags = run("git tag --sort -v:refname").split("\n")
 
     # Parse semver tag: v0.0.0-xxxx (optional suffix).
     out = []
