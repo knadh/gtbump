@@ -5,7 +5,7 @@ from time import sleep
 import subprocess
 import sys
 
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 
 MAJOR = "major"
 MINOR = "minor"
