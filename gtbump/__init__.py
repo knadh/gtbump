@@ -5,7 +5,7 @@ from time import sleep
 import subprocess
 import sys
 
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 
 MAJOR = "major"
 MINOR = "minor"
@@ -122,11 +122,11 @@ def main():
                    dest="push_last", help="push the last tag upstream (default: origin). IMPORTANT: This skips pre-push hooks with --no-verify. eg: --push-last, --push-last=remote_name")
     g.add_argument("-delete-last", "--delete-last", action="store_true",
                    dest="delete_last", help="delete the last tag")
-    g.add_argument("-major", "--major", action="store_true",
+    g.add_argument("-M", "--major", action="store_true",
                    dest="major", help="bump major version (vX.0.0)")
-    g.add_argument("-minor", "--minor", action="store_true",
+    g.add_argument("-m", "--minor", action="store_true",
                    dest="minor", help="bump minor version (v0.X.0)")
-    g.add_argument("-patch", "--patch", action="store_true",
+    g.add_argument("-p", "--patch", action="store_true",
                    dest="patch", help="bump patch version (v0.0.X)")
     args = p.parse_args()
 
