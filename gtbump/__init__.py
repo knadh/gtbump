@@ -5,7 +5,7 @@ from time import sleep
 import subprocess
 import sys
 
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 MAJOR = "major"
 MINOR = "minor"
@@ -177,7 +177,7 @@ def main():
         elif args.push_last:
             tag = get_last_tag()["tag"]
             print("pushing {} to {}".format(tag, args.push_last))
-            sleep(2);
+            sleep(2)
             try:
                 print(run("git push --no-verify {} {}".format(args.push_last, tag)))
             except Exception as e:
